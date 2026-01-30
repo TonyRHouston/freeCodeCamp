@@ -1,8 +1,11 @@
 {
-  "name": "freeCodeCampDC",
+  "name": "freeCodeCamp",
   "dockerComposeFile": "docker-compose.yml",
   "service": "devcontainer",
-  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "workspaceFolder": "/workspaces/freeCodeCamp",
+  "mounts": [
+    "source=node_modules,target=${containerWorkspaceFolder}/node_modules,type=volume"
+  ],
   "forwardPorts": [3000, 8000],
   "portsAttributes": {
     "3000": {
@@ -17,9 +20,52 @@
   "otherPortsAttributes": {
     "onAutoForward": "silent"
   },
-  "onCreateCommand": "[ ! -f .env ] && cp sample.env .env || true",
-  "updateContentCommand": "pnpm install && pnpm seed",
-  "postAttachCommand": {
-    "instructions": "bash -c 'echo \"\n\n\n Start a new terminal and run \\`pnpm run develop\\` when you are ready.\n\n\n\"'"
+  "onCreateCommand": "sudo chown node:node node_modules && ([ ! -f .env ] && cp sample.env .env || true)",
+  "updateContentCommand": "pnpm install --prefer-offline",
+  "postCreateCommand": "pnpm install --prefer-offline && rsync -a --include='*/' --include='.turbo/***' --exclude='*' /home/node/.cache/fcc/ ./ && set -a && . ./sample.env && set +a && pnpm seed",
+  "postAttachCommand": "echo '\\n\\n  Ready! To start developing:\\n\\n    Option 1: Press Ctrl+Shift+P, type \"Run Task\", select \"Start Development\"\\n    Option 2: Open a terminal and run: pnpm run develop\\n\\n  For E2E tests: npx playwright install chromium\\n  For curriculum tests: pnpm -F=curriculum install-puppeteer\\n\\n'",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ],
+      "settings": {
+        "tasks": {
+          "version": "2.0.0",
+          "tasks": [
+            {
+              "label": "Start API Server",
+              "type": "shell",
+              "command": "pnpm run develop:api",
+              "isBackground": true,
+              "problemMatcher": [],
+              "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "group": "develop"
+              }
+            },
+            {
+              "label": "Start Client Server",
+              "type": "shell",
+              "command": "pnpm run develop:client",
+              "isBackground": true,
+              "problemMatcher": [],
+              "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "group": "develop"
+              }
+            },
+            {
+              "label": "Start Development",
+              "dependsOn": ["Start API Server", "Start Client Server"],
+              "problemMatcher": []
+            }
+          ]
+        }
+      }
+    }
   }
 }
