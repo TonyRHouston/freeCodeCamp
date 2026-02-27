@@ -6,7 +6,7 @@ permissions:
 jobs:
   test-curriculum:
     name: Test Curriculum
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
