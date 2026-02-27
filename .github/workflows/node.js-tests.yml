@@ -13,7 +13,7 @@ jobs:
     name: Lint
     if: github.event_name != 'pull_request' || github.event.pull_request.user.login
       != 'renovate[bot]'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version:
@@ -68,7 +68,7 @@ jobs:
   build:
     name: Build
     needs: lint
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version:
@@ -105,7 +105,7 @@ jobs:
   test:
     name: Test
     needs: build
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -151,7 +151,7 @@ jobs:
   test-upcoming:
     name: Test - Upcoming Changes
     needs: build
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -197,7 +197,7 @@ jobs:
   test-localization:
     name: Test - i18n
     needs: build
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     if: github.event.pull_request.user.login == 'camperbot' && github.head_ref ==
       'chore/update-i18n-curriculum-submodule'
     strategy:
