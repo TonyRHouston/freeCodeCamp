@@ -1,49 +1,45 @@
 name: CI - Devcontainer
-
 on:
   pull_request:
     paths:
-      - '.devcontainer/**'
-      - 'docker/devcontainer/**'
-  workflow_dispatch:
-
+    - .devcontainer/**
+    - docker/devcontainer/**
+  workflow_dispatch: null
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref
+    }}
   cancel-in-progress: true
-
 permissions:
   contents: read
   packages: read
-
 jobs:
   validate:
     name: Validate
-    runs-on: ubuntu-24.04
-
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+    - name: Checkout
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+    - name: Login to GHCR
+      uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Install devcontainer CLI
+      run: npm install -g @devcontainers/cli
+    - name: Build devcontainer
+      run: devcontainer build --workspace-folder .
+    - name: Start devcontainer
+      run: devcontainer up --workspace-folder .
+    - name: Validate required tools
+      run: 'devcontainer exec --workspace-folder . pnpm --version
 
-      - name: Login to GHCR
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+        devcontainer exec --workspace-folder . rsync --version
 
-      - name: Install devcontainer CLI
-        run: npm install -g @devcontainers/cli
+        devcontainer exec --workspace-folder . mongosh --version
 
-      - name: Build devcontainer
-        run: devcontainer build --workspace-folder .
+        devcontainer exec --workspace-folder . node --version
 
-      - name: Start devcontainer
-        run: devcontainer up --workspace-folder .
+        devcontainer exec --workspace-folder . git --version
 
-      - name: Validate required tools
-        run: |
-          devcontainer exec --workspace-folder . pnpm --version
-          devcontainer exec --workspace-folder . rsync --version
-          devcontainer exec --workspace-folder . mongosh --version
-          devcontainer exec --workspace-folder . node --version
-          devcontainer exec --workspace-folder . git --version
+        '
