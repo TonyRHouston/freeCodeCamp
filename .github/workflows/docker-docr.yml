@@ -1,5 +1,4 @@
 name: CD - Docker - DOCR
-
 on:
   workflow_dispatch:
     inputs:
@@ -8,19 +7,19 @@ on:
         type: choice
         description: 'Input: The site tld (variant) to build'
         options:
-          - dev
-          - org
-        default: 'dev'
+        - dev
+        - org
+        default: dev
       app:
         required: true
         type: string
         description: 'Input: The app (component) to build'
-        default: 'api'
+        default: api
       show_upcoming_changes:
         required: false
         type: string
         description: 'Input: Show upcoming changes flag (true/false)'
-        default: 'false'
+        default: false
   workflow_call:
     inputs:
       site_tld:
@@ -35,49 +34,48 @@ on:
         required: false
         type: string
         description: 'Input: Show upcoming changes flag (true/false)'
-        default: 'false'
+        default: false
     outputs:
       tagname:
         description: 'Output: The tagname for the image built'
         value: ${{ jobs.build.outputs.tagname }}
-
 jobs:
   build:
     name: Build & Push
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
       tagname: ${{ steps.tagname.outputs.tagname }}
-
     steps:
-      - name: Checkout Source Files
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+    - name: Checkout Source Files
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+    - name: Create a tagname
+      id: tagname
+      run: 'tagname=$(git rev-parse --short HEAD)-$(date +%Y%m%d)-$(date +%H%M)
 
-      - name: Create a tagname
-        id: tagname
-        run: |
-          tagname=$(git rev-parse --short HEAD)-$(date +%Y%m%d)-$(date +%H%M)
-          echo "tagname=$tagname" >> $GITHUB_ENV
-          echo "tagname=$tagname" >> $GITHUB_OUTPUT
+        echo "tagname=$tagname" >> $GITHUB_ENV
 
-      - name: Build & Tag Image
-        run: |
-          docker build \
-            --build-arg SHOW_UPCOMING_CHANGES=${{ inputs.show_upcoming_changes }} \
-            --tag registry.digitalocean.com/${{ secrets.DOCR_NAME }}/${{ inputs.site_tld }}/learn-${{ inputs.app }}:$tagname \
-            --tag registry.digitalocean.com/${{ secrets.DOCR_NAME }}/${{ inputs.site_tld }}/learn-${{ inputs.app }}:latest \
-            --file docker/${{ inputs.app }}/Dockerfile .
+        echo "tagname=$tagname" >> $GITHUB_OUTPUT
 
-      - name: Install doctl
-        uses: digitalocean/action-doctl@v2
-        with:
-          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+        '
+    - name: Build & Tag Image
+      run: "docker build \\\n  --build-arg SHOW_UPCOMING_CHANGES=${{ inputs.show_upcoming_changes\
+        \ }} \\\n  --tag registry.digitalocean.com/${{ secrets.DOCR_NAME }}/${{ inputs.site_tld\
+        \ }}/learn-${{ inputs.app }}:$tagname \\\n  --tag registry.digitalocean.com/${{\
+        \ secrets.DOCR_NAME }}/${{ inputs.site_tld }}/learn-${{ inputs.app }}:latest\
+        \ \\\n  --file docker/${{ inputs.app }}/Dockerfile .\n"
+    - name: Install doctl
+      uses: digitalocean/action-doctl@v2
+      with:
+        token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+    - name: Log in to DigitalOcean Container Registry with short-lived credentials
+      run: doctl registry login --expiry-seconds 1200
+    - name: Push image to DigitalOcean Container Registry
+      run: 'docker push registry.digitalocean.com/${{ secrets.DOCR_NAME }}/${{ inputs.site_tld
+        }}/learn-${{ inputs.app }}:$tagname
 
-      - name: Log in to DigitalOcean Container Registry with short-lived credentials
-        run: doctl registry login --expiry-seconds 1200
+        docker push registry.digitalocean.com/${{ secrets.DOCR_NAME }}/${{ inputs.site_tld
+        }}/learn-${{ inputs.app }}:latest
 
-      - name: Push image to DigitalOcean Container Registry
-        run: |
-          docker push registry.digitalocean.com/${{ secrets.DOCR_NAME }}/${{ inputs.site_tld }}/learn-${{ inputs.app }}:$tagname
-          docker push registry.digitalocean.com/${{ secrets.DOCR_NAME }}/${{ inputs.site_tld }}/learn-${{ inputs.app }}:latest
+        '
