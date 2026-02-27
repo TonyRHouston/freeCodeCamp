@@ -9,7 +9,7 @@ env:
 jobs:
   i18n-download-client-ui-translations:
     name: Client
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
     - name: Checkout Source Files
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
