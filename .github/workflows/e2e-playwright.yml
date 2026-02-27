@@ -9,7 +9,7 @@ concurrency:
 jobs:
   build-client:
     name: Build Client
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version:
@@ -62,7 +62,7 @@ jobs:
         path: client/public/stats.json
   build-api:
     name: Build API (Container)
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
     - name: Checkout Source Files
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -79,7 +79,7 @@ jobs:
         path: api-artifact.tar
   playwright-run:
     name: Run Playwright Tests
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     needs:
     - build-client
     - build-api
